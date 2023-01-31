@@ -5,7 +5,7 @@ pub type Text = String;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Tag {
     name: String,
-    attrs: Option<HashMap<String, String>>,
+    attributes: Option<HashMap<String, String>>,
     // A flag that represents a tag whether is self-closing. <tag />
     self_closing: bool,
     // A flag that represents a tag whether is the closed one. </ tag>
@@ -23,7 +23,7 @@ impl Tag {
     pub fn new(name: &str) -> Tag {
         Tag {
             name: String::from(name),
-            attrs: None,
+            attributes: None,
             self_closing: false,
             terminator: false,
         }
@@ -33,30 +33,30 @@ impl Tag {
         &self.name
     }
 
-    pub fn set_attrs(&mut self, attrs: HashMap<String, String>) {
-        self.attrs = Some(attrs);
+    pub fn set_attributes(&mut self, attributes: HashMap<String, String>) {
+        self.attributes = Some(attributes);
     }
 
-    pub fn get_attrs(&self) -> Option<&HashMap<String, String>> {
-        self.attrs.as_ref()
+    pub fn get_attributes(&self) -> Option<&HashMap<String, String>> {
+        self.attributes.as_ref()
     }
 
-    pub fn set_attr(&mut self, attr: &str, value: &str) {
-        match self.attrs.as_mut() {
-            Some(attrs) => {
-                attrs.insert(String::from(attr), String::from(value));
+    pub fn set_attribute(&mut self, attribute: &str, value: &str) {
+        match self.attributes.as_mut() {
+            Some(attributes) => {
+                attributes.insert(String::from(attribute), String::from(value));
             }
             None => {
-                let mut attrs = HashMap::new();
-                attrs.insert(String::from(attr), String::from(value));
-                self.attrs = Some(attrs);
+                let mut attributes = HashMap::new();
+                attributes.insert(String::from(attribute), String::from(value));
+                self.attributes = Some(attributes);
             }
         }
     }
 
-    pub fn get_attr(&self, attr: &str) -> Option<String> {
-        if let Some(attrs) = &self.attrs {
-            if let Some(v) = attrs.get(attr) {
+    pub fn get_attribute_value(&self, attribute_name: &str) -> Option<String> {
+        if let Some(attributes) = &self.attributes {
+            if let Some(v) = attributes.get(attribute_name) {
                 return Some(v.to_string());
             }
         }

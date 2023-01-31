@@ -53,6 +53,28 @@ impl PartialEq for NodeData {
     }
 }
 
+impl NodeData {
+    pub fn get_payload(&self) -> &Payload {
+        &self.payload
+    }
+
+    pub fn get_children(&self) -> &Vec<NodeDataRef> {
+        self.children.borrow().as_ref()
+    }
+
+    pub fn get_parent(&self) -> Option<NodeDataRef> {
+        let parent_weak = self.parent.borrow();
+        match parent_weak.upgrade() {
+            Some(parent_rc_ref) => Some(parent_rc_ref),
+            None => None,
+        }
+    }
+
+    pub fn has_parent(&self) -> bool {
+        self.get_parent().is_some()
+    }
+}
+
 /// This struct is used to own a [`NodeData`] inside an [`Rc`]. The [`Rc`]
 /// can be shared, so that it can have multiple owners. It does not have
 /// getter methods for [`NodeData`]'s properties, instead it implements the
@@ -127,22 +149,6 @@ impl Node {
         let new_child = Node::new(payload);
         self.add_child_and_update_parent(&new_child);
         new_child.get_copy_of_internal_arc()
-    }
-
-    pub fn get_parent(&self) -> Option<NodeDataRef> {
-        let parent_weak = self.parent.borrow();
-        match parent_weak.upgrade() {
-            Some(parent_rc_ref) => Some(parent_rc_ref),
-            None => None,
-        }
-    }
-
-    pub fn has_parent(&self) -> bool {
-        self.get_parent().is_some()
-    }
-
-    pub fn get_payload(&self) -> &Payload {
-        &self.payload
     }
 }
 

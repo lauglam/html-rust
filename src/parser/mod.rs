@@ -34,7 +34,7 @@ pub use input::Input;
 ///         payload: Tag(
 ///             Tag {
 ///                 name: "root",
-///                 attrs: None,
+///                 attributes: None,
 ///                 self_closing: false,
 ///                 terminator: false,
 ///             },
@@ -48,7 +48,7 @@ pub use input::Input;
 ///                     payload: Tag(
 ///                         Tag {
 ///                             name: "body",
-///                             attrs: None,
+///                             attributes: None,
 ///                             self_closing: false,
 ///                             terminator: false,
 ///                         },
@@ -62,7 +62,7 @@ pub use input::Input;
 ///                                 payload: Tag(
 ///                                     Tag {
 ///                                         name: "h1",
-///                                         attrs: Some(
+///                                         attributes: Some(
 ///                                             {
 ///                                                 "class": "h1",
 ///                                             },
@@ -165,7 +165,7 @@ fn parse_tag_attr_value(input: &mut Input, tag_end: usize, delimiter: char) -> R
 
 /// Gets the cursor position at the end of tag.
 ///
-/// <tag attr="value" >
+/// <tag attribute="value" >
 ///                   ^
 ///                   Return this position.
 fn get_tag_end(input: &mut Input) -> Result<usize, String> {
@@ -196,12 +196,12 @@ fn get_tag_end(input: &mut Input) -> Result<usize, String> {
 /// Parses tag attributes.
 ///
 /// State to receive:
-/// The cursor points to the first character of <attr>.
-/// <attr>[ = "<value>"] [/]>
+/// The cursor points to the first character of <attribute>.
+/// <attribute>[ = "<value>"] [/]>
 /// or
-/// <attr>[ = '<value>'] [/]>
+/// <attribute>[ = '<value>'] [/]>
 /// or
-/// <attr>[ = <value>] [/]>
+/// <attribute>[ = <value>] [/]>
 fn parse_tag_attr(input: &mut Input, mut tag: Tag) -> Result<Tag, String> {
     // get the end position of the tag
     let tag_end = get_tag_end(input)?;
@@ -222,7 +222,7 @@ fn parse_tag_attr(input: &mut Input, mut tag: Tag) -> Result<Tag, String> {
 
         // if the tag contains '=', that position is the end position of the attribute name
         //
-        // attr="value"
+        // attribute="value"
         //     ^
         if let Some(cursor) = input.find('=') {
             if cursor < tag_end {
@@ -233,7 +233,7 @@ fn parse_tag_attr(input: &mut Input, mut tag: Tag) -> Result<Tag, String> {
         // if the tag contains an ' ' and it precedes '=',
         // make that position the end position of the attribute name
         //
-        // attr = "value"
+        // attribute = "value"
         //     ^
         if let Some(cursor) = input.find(' ') {
             if cursor < attr_name_end {
@@ -255,21 +255,21 @@ fn parse_tag_attr(input: &mut Input, mut tag: Tag) -> Result<Tag, String> {
                     // move cursor to after '='
                     input.next_char();
                     if input.expect('"') {
-                        // attr = "value"
+                        // attribute = "value"
                         //        ^
                         match parse_tag_attr_value(input, tag_end, '"') {
                             Ok(v) => attr_value = v,
                             Err(e) => return Err(e),
                         }
                     } else if input.expect('\'') {
-                        // attr = 'value'
+                        // attribute = 'value'
                         //        ^
                         match parse_tag_attr_value(input, tag_end, '\'') {
                             Ok(v) => attr_value = v,
                             Err(e) => return Err(e),
                         }
                     } else {
-                        // attr = value
+                        // attribute = value
                         //        ^
                         match parse_tag_attr_value(input, tag_end, ' ') {
                             Ok(v) => attr_value = v,
@@ -308,9 +308,9 @@ fn parse_tag_attr(input: &mut Input, mut tag: Tag) -> Result<Tag, String> {
 ///
 /// State to receive:
 /// The cursor points to the first character of <tag_name>.
-/// <tag_name> [<attr>[="<value>"]] [/]>
+/// <tag_name> [<attribute>[="<value>"]] [/]>
 /// or
-/// <tag_name> [<attr>[='<value>']] [/]>
+/// <tag_name> [<attribute>[='<value>']] [/]>
 fn parse_tag_name(input: &mut Input, terminator: bool) -> Result<Tag, String> {
     // get the start position of the tag name
     let name_bgn = input.get_cursor();
@@ -322,7 +322,7 @@ fn parse_tag_name(input: &mut Input, terminator: bool) -> Result<Tag, String> {
 
     // if the tag contains ' ', make that position the end position of the tag name
     if let Some(cursor) = input.find(' ') {
-        // li attr="value"
+        // li attribute="value"
         //   ^
         if cursor < tag_end {
             name_end = cursor;
@@ -347,7 +347,7 @@ fn parse_tag_name(input: &mut Input, terminator: bool) -> Result<Tag, String> {
     }
 
     // tag has attributes
-    // <tag attr="value">
+    // <tag attribute="value">
     //     ^
     input.next_char();
 
@@ -366,9 +366,9 @@ fn parse_tag_name(input: &mut Input, terminator: bool) -> Result<Tag, String> {
 ///
 /// State to receive:
 /// The cursor points to the first '<'.
-/// <[/]<tag_name> [<attr>[="<value>"]] [/]>
+/// <[/]<tag_name> [<attribute>[="<value>"]] [/]>
 /// or
-/// <[/]<tag_name> [<attr>[='<value>']] [/]>
+/// <[/]<tag_name> [<attribute>[='<value>']] [/]>
 fn parse_tag(input: &mut Input) -> Result<Node, String> {
     // move cursor to after '<'
     input.next();
@@ -493,12 +493,12 @@ fn parse_doctype(input: &mut Input) -> Result<Node, String> {
 
     // Set the attribute to "html"
     // The value of attribute is ""
-    let mut attr: HashMap<String, String> = HashMap::new();
+    let mut attribute: HashMap<String, String> = HashMap::new();
     let bgn = input.get_cursor();
     let end = bgn + "html".len();
     input.set_cursor(end); // move cursor to '>'
-    attr.insert(input.get_string(bgn, end)?, String::new());
-    tag.set_attrs(attr);
+    attribute.insert(input.get_string(bgn, end)?, String::new());
+    tag.set_attrs(attribute);
 
     let payload = Payload::Tag(tag);
     let node = Node::new(payload);
